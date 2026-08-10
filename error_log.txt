@@ -1,0 +1,11 @@
+RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 && <= 17825792. Received 17825795
+    at validateOffset (node:buffer:134:3)
+    at Buffer.write (node:buffer:1214:5)
+    at Object.encodeUTF8Into (D:\Digital card Appifly\backend master admin\node_modules\bson\lib\bson.cjs:320:58)
+    at serializeInto (D:\Digital card Appifly\backend master admin\node_modules\bson\lib\bson.cjs:4093:36)
+    at Object.serialize (D:\Digital card Appifly\backend master admin\node_modules\bson\lib\bson.cjs:4642:32)
+    at OpMsgRequest.serializeBson (D:\Digital card Appifly\backend master admin\node_modules\mongodb\lib\cmap\commands.js:421:28)
+    at OpMsgRequest.makeSections (D:\Digital card Appifly\backend master admin\node_modules\mongodb\lib\cmap\commands.js:384:37)
+    at OpMsgRequest.toBin (D:\Digital card Appifly\backend master admin\node_modules\mongodb\lib\cmap\commands.js:367:29)
+    at Connection.writeCommand (D:\Digital card Appifly\backend master admin\node_modules\mongodb\lib\cmap\connection.js:398:67)
+    at Connection.sendWire (D:\Digital card Appifly\backend master admin\node_modules\mongodb\lib\cmap\connection.js:253:24)
