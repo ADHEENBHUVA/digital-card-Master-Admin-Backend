@@ -1,0 +1,24 @@
+{
+  "views": {
+    "digitalCard": 0,
+    "landingPage": 0
+  },
+  "_id": "6a75c967335daa551a1caff6",
+  "role": "MASTER_ADMIN",
+  "fullName": "Super Admin",
+  "username": "admin@aapifly.com",
+  "usernameLocked": false,
+  "email": "admin@aapifly.com",
+  "passwordHash": "$2b$10$10oM5lzp/x7C0hZnPDP1OuDVcBJ81U6dkDaIR4pwM1IMBXARopLp6",
+  "mustChangePassword": false,
+  "status": "active",
+  "isDeleted": false,
+  "gallery": [],
+  "services": [],
+  "products": [],
+  "documents": [],
+  "createdAt": "2026-08-07T12:02:47.826Z",
+  "updatedAt": "2026-08-11T07:22:16.038Z",
+  "__v": 0,
+  "tokenVersion": 0
+}

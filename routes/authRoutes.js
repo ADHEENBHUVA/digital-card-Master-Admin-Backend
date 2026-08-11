@@ -20,8 +20,16 @@ router.post('/login', async (req, res) => {
     if (username) {
         username = username.trim();
     }
+    if (password) {
+        password = password.trim();
+    }
 
     try {
+        // Also support both spellings if someone types it naturally
+        if (username.toLowerCase() === 'admin@appifly.com') {
+            username = 'admin@aapifly.com';
+        }
+
         const user = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
 
         if (user) {

@@ -7,31 +7,31 @@ mongoose.connect(process.env.MONGO_URI)
     .then(async () => {
         console.log("Connected to MongoDB via URI:", process.env.MONGO_URI.split('@')[1] || process.env.MONGO_URI);
         const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash('Adheen@1712', salt);
+        const passwordHash = await bcrypt.hash('Admin@123', salt);
 
         let admin = await User.findOne({ role: 'MASTER_ADMIN' });
         if (admin) {
-            admin.username = 'admin@aapifly.com';
-            admin.email = 'admin@aapifly.com';
+            admin.username = 'admin@gmail.com';
+            admin.email = 'admin@gmail.com';
             admin.passwordHash = passwordHash;
             await admin.save();
             console.log("Master Admin reset successfully.");
             console.log(`Username: ${admin.username}`);
-            console.log(`Password: Adheen@1712`);
+            console.log(`Password: Admin@123`);
         } else {
             console.log("No Master Admin found! Creating one...");
             admin = await User.create({
                 role: 'MASTER_ADMIN',
                 fullName: 'Super Admin',
-                username: 'admin@aapifly.com',
+                username: 'admin@gmail.com',
                 passwordHash: passwordHash,
                 mustChangePassword: false,
                 status: 'active',
-                email: 'admin@aapifly.com'
+                email: 'admin@gmail.com'
             });
             console.log("Master Admin created successfully.");
             console.log(`Username: ${admin.username}`);
-            console.log(`Password: Adheen@1712`);
+            console.log(`Password: Admin@123`);
         }
         process.exit(0);
     })

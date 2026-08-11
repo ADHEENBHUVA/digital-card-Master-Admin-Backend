@@ -31,8 +31,7 @@ const DigitalCardSchema = new mongoose.Schema({
         website: { type: String, default: '' },
         address: { type: String, default: '' },
         googleMap: { type: String, default: '' },
-        inquiry: { type: Boolean, default: false },
-        profile: { type: Boolean, default: false }
+        inquiry: { type: String, default: '' }
     },
 
     socialLinks: {

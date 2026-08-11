@@ -9,7 +9,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Ensure QR directory exists
-const QR_DIR = path.join(__dirname, '..', 'uploads', 'qr');
+const QR_DIR = path.join(__dirname, '../..', 'uploads', 'qr');
 if (!fs.existsSync(QR_DIR)) {
     fs.mkdirSync(QR_DIR, { recursive: true });
 }
