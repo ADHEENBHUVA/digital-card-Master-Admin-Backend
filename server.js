@@ -140,7 +140,7 @@ app.use('/api/digital-card', require('./routes/digitalCardRoutes'));
 
 // Error handling middleware can go here
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
     });
