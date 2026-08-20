@@ -43,6 +43,13 @@ router.post('/sub-admins', protect, adminOnly, async (req, res) => {
             return res.status(400).json({ message: 'Username already exists' });
         }
 
+        if (email) {
+            const existingEmail = await User.findOne({ email });
+            if (existingEmail) {
+                return res.status(400).json({ message: 'Email is already registered' });
+            }
+        }
+
         const slug = username;
         const existingSlug = await User.findOne({ slug });
         if (existingSlug) {
@@ -100,7 +107,8 @@ router.post('/sub-admins', protect, adminOnly, async (req, res) => {
 
         res.status(201).json(responseData);
     } catch (error) {
-        res.status(500).json({ message: 'Error creating sub admin', error: error.message });
+        console.error("Sub admin creation error:", error);
+        res.status(500).json({ message: 'Error creating sub admin: ' + error.message, error: error.message, stack: error.stack });
     }
 });
 
@@ -362,9 +370,21 @@ router.delete('/sub-admins/:id', protect, adminOnly, async (req, res) => {
             return res.status(404).json({ message: 'Sub Admin not found' });
         }
 
+        const timestamp = Date.now();
+        subAdmin.username = `${subAdmin.username}_deleted_${timestamp}`;
+        if (subAdmin.email) {
+            subAdmin.email = `${subAdmin.email}_deleted_${timestamp}`;
+        }
+        subAdmin.slug = `${subAdmin.slug}_deleted_${timestamp}`;
+
         subAdmin.isDeleted = true;
         subAdmin.status = 'deleted';
         await subAdmin.save();
+
+        await DigitalCard.findOneAndUpdate(
+            { ownerId: subAdmin._id },
+            { $set: { slug: subAdmin.slug } }
+        );
 
         res.json({ message: 'Sub Admin successfully deleted' });
     } catch (error) {
