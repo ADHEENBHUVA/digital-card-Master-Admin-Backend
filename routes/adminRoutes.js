@@ -412,9 +412,75 @@ router.get('/sub-admins/:id/nfc', protect, adminOnly, async (req, res) => {
         if (!subAdmin) {
             return res.status(404).json({ message: 'Sub Admin not found' });
         }
-        res.json({ nfcUrl: subAdmin.nfcUrl, nfcStatus: 'Active' });
+
+        let card = await DigitalCard.findOne({ ownerId: subAdmin._id });
+        if (!card) {
+            return res.status(404).json({ message: 'Digital Card not found' });
+        }
+
+        res.json({
+            nfcUrl: subAdmin.nfcUrl,
+            nfcStatus: card.nfcStatus,
+            nfcEnabled: card.nfcEnabled,
+            cardNumber: card.cardNumber,
+            uniqueToken: card.uniqueToken,
+            isActive: card.isActive
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching NFC URL' });
+    }
+});
+
+// POST /api/admin/sub-admins/:id/nfc/generate
+router.post('/sub-admins/:id/nfc/generate', protect, adminOnly, async (req, res) => {
+    try {
+        const subAdmin = await User.findOne({ _id: req.params.id, role: 'SUB_ADMIN' });
+        if (!subAdmin) return res.status(404).json({ message: 'Sub Admin not found' });
+
+        let card = await DigitalCard.findOne({ ownerId: subAdmin._id });
+        if (!card) return res.status(404).json({ message: 'Digital Card not found' });
+
+        const crypto = require('crypto');
+        const uniqueToken = crypto.randomBytes(8).toString('hex');
+        const cardNumber = `NFC-${Date.now().toString().slice(-6)}`;
+
+        card.nfcEnabled = true;
+        card.uniqueToken = uniqueToken;
+        card.cardNumber = cardNumber;
+        card.nfcStatus = 'active';
+        card.isActive = true;
+        card.assignedTo = subAdmin._id;
+        card.assignedBy = req.user._id;
+
+        await card.save();
+
+        res.json({ message: 'NFC Card generated successfully', card });
+    } catch (error) {
+        res.status(500).json({ message: 'Error generating NFC card' });
+    }
+});
+
+// PUT /api/admin/sub-admins/:id/nfc/toggle
+router.put('/sub-admins/:id/nfc/toggle', protect, adminOnly, async (req, res) => {
+    try {
+        const subAdmin = await User.findOne({ _id: req.params.id, role: 'SUB_ADMIN' });
+        if (!subAdmin) return res.status(404).json({ message: 'Sub Admin not found' });
+
+        let card = await DigitalCard.findOne({ ownerId: subAdmin._id });
+        if (!card) return res.status(404).json({ message: 'Digital Card not found' });
+
+        if (!card.nfcEnabled) {
+            return res.status(400).json({ message: 'NFC is not enabled for this card' });
+        }
+
+        card.isActive = !card.isActive;
+        card.nfcStatus = card.isActive ? 'active' : 'inactive';
+
+        await card.save();
+
+        res.json({ message: `NFC Card ${card.isActive ? 'activated' : 'deactivated'} successfully`, card });
+    } catch (error) {
+        res.status(500).json({ message: 'Error toggling NFC status' });
     }
 });
 
