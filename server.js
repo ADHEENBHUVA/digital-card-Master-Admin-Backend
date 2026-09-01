@@ -12,7 +12,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
-connectDB();
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    connectDB();
+}
 
 app.use(cors());
 app.use(express.json({ limit: '200mb' }));
@@ -105,7 +107,9 @@ const seedDatabase = async () => {
         console.error("Error seeding database:", err);
     }
 };
-seedDatabase();
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    seedDatabase();
+}
 
 // Helper for fallback
 const getFallbackProfile = () => {
@@ -120,7 +124,7 @@ const getFallbackProfile = () => {
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,
-        message: "Backend API is running"
+        message: "Master Admin Backend API is running"
     });
 });
 
