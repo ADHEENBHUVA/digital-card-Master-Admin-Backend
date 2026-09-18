@@ -162,33 +162,15 @@ router.put('/sub-admins/:id', protect, adminOnly, async (req, res) => {
             return res.status(404).json({ message: 'Sub Admin not found' });
         }
 
-        const processBase64Media = (base64String, fieldName) => {
+        const { uploadToCloudinary } = require('../config/cloudinary');
+        const processBase64Media = async (base64String, fieldName) => {
             if (!base64String || !base64String.startsWith('data:')) return base64String;
-
             try {
-                const uploadDir = path.join(__dirname, '../../uploads/media');
-                if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-                const parts = base64String.split(';base64,');
-                if (parts.length === 2 && parts[0].startsWith('data:')) {
-                    const mimeType = parts[0].replace('data:', '');
-                    const ext = mimeType.split('/')[1] || 'png';
-                    const buffer = Buffer.from(parts[1], 'base64');
-                    const fileName = `${fieldName}_${req.params.id}_${Date.now()}.${ext}`;
-                    fs.writeFileSync(path.join(uploadDir, fileName), buffer);
-                    return `/uploads/media/${fileName}`;
-                }
+                return await uploadToCloudinary(base64String, 'admin-media');
             } catch (err) {
-                console.error(`Error saving ${fieldName} to disk:`, err);
-                throw new Error(`Failed to save uploaded ${fieldName} media. File might be invalid or disk is full.`);
+                console.error(`Error saving ${fieldName} to Cloudinary:`, err);
+                throw new Error(`Failed to save uploaded ${fieldName} media.`);
             }
-
-            // If it starts with data: and failed to process cleanly, do not leak 17MB strings to Mongo!
-            if (base64String.startsWith('data:')) {
-                throw new Error(`Received unparsable base64 string for ${fieldName}. Check file format.`);
-            }
-
-            return base64String;
         };
 
         // Allowed fields to update
@@ -200,10 +182,10 @@ router.put('/sub-admins/:id', protect, adminOnly, async (req, res) => {
             if (req.body.profile.companyName !== undefined) subAdmin.profile.companyName = req.body.profile.companyName;
             if (req.body.profile.designation !== undefined) subAdmin.profile.designation = req.body.profile.designation;
             if (req.body.profile.photo !== undefined) {
-                subAdmin.profile.photo = processBase64Media(req.body.profile.photo, 'profile_photo');
+                subAdmin.profile.photo = await processBase64Media(req.body.profile.photo, 'profile_photo');
             }
             if (req.body.profile.coverImage !== undefined) {
-                subAdmin.profile.coverImage = processBase64Media(req.body.profile.coverImage, 'profile_cover');
+                subAdmin.profile.coverImage = await processBase64Media(req.body.profile.coverImage, 'profile_cover');
             }
             if (req.body.profile.description !== undefined) subAdmin.profile.description = req.body.profile.description;
         }
@@ -297,38 +279,23 @@ router.put('/sub-admins/:id/digital-card', protect, adminOnly, async (req, res) 
             });
         }
 
-        const processBase64Media = (base64String, fieldName) => {
+        const { uploadToCloudinary } = require('../config/cloudinary');
+        const processBase64Media = async (base64String, fieldName) => {
             if (!base64String || !base64String.startsWith('data:')) return base64String;
             try {
-                const uploadDir = path.join(__dirname, '../../uploads/media');
-                if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-                const parts = base64String.split(';base64,');
-                if (parts.length === 2 && parts[0].startsWith('data:')) {
-                    const mimeType = parts[0].replace('data:', '');
-                    const ext = mimeType.split('/')[1] || 'png';
-                    const buffer = Buffer.from(parts[1], 'base64');
-                    const fileName = `${fieldName}_${req.params.id}_${Date.now()}.${ext}`;
-                    fs.writeFileSync(path.join(uploadDir, fileName), buffer);
-                    return `/uploads/media/${fileName}`;
-                }
+                return await uploadToCloudinary(base64String, 'admin-media');
             } catch (err) {
-                console.error(`Error saving ${fieldName} to disk:`, err);
-                throw new Error(`Failed to save uploaded ${fieldName} media. File might be invalid or disk is full.`);
+                console.error(`Error saving ${fieldName} to Cloudinary:`, err);
+                throw new Error(`Failed to save uploaded ${fieldName} media.`);
             }
-
-            if (base64String.startsWith('data:')) {
-                throw new Error(`Received unparsable base64 string for ${fieldName}. Check file format.`);
-            }
-
-            return base64String;
         };
 
         if (hero) {
-            if (hero.coverVideo) hero.coverVideo = processBase64Media(hero.coverVideo, 'cover_video');
-            if (hero.coverImage) hero.coverImage = processBase64Media(hero.coverImage, 'cover_image');
-            if (hero.image) hero.image = processBase64Media(hero.image, 'image');
-            if (hero.logo) hero.logo = processBase64Media(hero.logo, 'logo');
-            if (hero.photo) hero.photo = processBase64Media(hero.photo, 'photo');
+            if (hero.coverVideo) hero.coverVideo = await processBase64Media(hero.coverVideo, 'cover_video');
+            if (hero.coverImage) hero.coverImage = await processBase64Media(hero.coverImage, 'cover_image');
+            if (hero.image) hero.image = await processBase64Media(hero.image, 'image');
+            if (hero.logo) hero.logo = await processBase64Media(hero.logo, 'logo');
+            if (hero.photo) hero.photo = await processBase64Media(hero.photo, 'photo');
         }
 
         const currentCard = card.toObject();
