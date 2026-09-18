@@ -28,6 +28,27 @@ router.get('/sub-admins', protect, adminOnly, async (req, res) => {
     }
 });
 
+// Generate Cloudinary Signature for Client-Side Direct Uploads
+router.get('/cloudinary-signature', protect, adminOnly, (req, res) => {
+    const { cloudinary } = require('../config/cloudinary');
+    try {
+        const timestamp = Math.round((new Date).getTime() / 1000);
+        const signature = cloudinary.utils.api_sign_request({
+            timestamp: timestamp,
+            folder: 'digital-card'
+        }, process.env.CLOUDINARY_API_SECRET);
+
+        res.json({
+            signature,
+            timestamp,
+            cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+            apiKey: process.env.CLOUDINARY_API_KEY
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to generate signature' });
+    }
+});
+
 // POST /api/admin/sub-admins
 router.post('/sub-admins', protect, adminOnly, async (req, res) => {
     const { fullName, username, password, email, mobile, companyName, designation } = req.body;
