@@ -81,10 +81,6 @@ router.put('/my-card', protect, async (req, res) => {
                 console.error(`Error saving ${fieldName} to Cloudinary:`, err);
                 throw new Error(`Failed to save uploaded ${fieldName} media.`);
             }
-
-            if (base64String.startsWith('data:')) {
-                throw new Error('Unable to process this media file. Please try another image or video.');
-            }
         };
 
         if (hero) {
