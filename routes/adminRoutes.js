@@ -427,13 +427,16 @@ router.get('/sub-admins/:id/nfc', protect, adminOnly, async (req, res) => {
             return res.status(404).json({ message: 'Digital Card not found' });
         }
 
+        const writtenCards = await NfcCard.find({ subAdminId: subAdmin._id }).sort({ createdAt: -1 });
+
         res.json({
             nfcUrl: subAdmin.nfcUrl,
             nfcStatus: card.nfcStatus,
             nfcEnabled: card.nfcEnabled,
             cardNumber: card.cardNumber,
             uniqueToken: card.uniqueToken,
-            isActive: card.isActive
+            isActive: card.isActive,
+            writtenCards: writtenCards
         });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching NFC URL' });
