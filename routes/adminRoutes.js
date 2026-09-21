@@ -496,4 +496,17 @@ router.put('/sub-admins/:id/nfc/toggle', protect, adminOnly, async (req, res) =>
     }
 });
 
+// DELETE /api/admin/nfc-cards/:cardId
+router.delete('/nfc-cards/:cardId', protect, adminOnly, async (req, res) => {
+    try {
+        const deletedCard = await NfcCard.findOneAndDelete({ cardId: req.params.cardId });
+        if (!deletedCard) {
+            return res.status(404).json({ message: 'Card not found' });
+        }
+        res.json({ message: 'Card successfully erased' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting card' });
+    }
+});
+
 module.exports = router;
