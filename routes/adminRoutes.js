@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const DigitalCard = require('../models/DigitalCard');
+const NfcCard = require('../models/NfcCard');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 const QRCode = require('qrcode');
 const path = require('path');
@@ -21,7 +22,23 @@ try {
 // GET /api/admin/sub-admins
 router.get('/sub-admins', protect, adminOnly, async (req, res) => {
     try {
-        const subAdmins = await User.find({ role: 'SUB_ADMIN', isDeleted: false }).select('-passwordHash');
+        const subAdmins = await User.find({ role: 'SUB_ADMIN', isDeleted: false }).select('-passwordHash').lean();
+        
+        for (let admin of subAdmins) {
+            const activeCards = await NfcCard.countDocuments({ subAdminId: admin._id, status: 'Active' });
+            const disabledCards = await NfcCard.countDocuments({ subAdminId: admin._id, status: 'Disabled' });
+            
+            const digitalCard = await DigitalCard.findOne({ ownerId: admin._id });
+            const masterCardCount = (digitalCard && digitalCard.nfcEnabled) ? 1 : 0;
+
+            admin.nfcStats = {
+                active: activeCards,
+                disabled: disabledCards,
+                master: masterCardCount,
+                total: activeCards + disabledCards + masterCardCount
+            };
+        }
+
         res.json(subAdmins);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching sub admins' });
