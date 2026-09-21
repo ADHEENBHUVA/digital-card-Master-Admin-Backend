@@ -18,15 +18,15 @@ router.post('/login', async (req, res) => {
     let { username, password } = req.body;
 
     if (username) {
-        username = username.trim();
+        username = String(username).trim();
     }
     if (password) {
-        password = password.trim();
+        password = String(password).trim();
     }
 
     try {
         // Also support both spellings if someone types it naturally
-        if (username.toLowerCase() === 'admin@appifly.com') {
+        if (username && username.toLowerCase() === 'admin@appifly.com') {
             username = 'admin@aapifly.com';
         }
 
@@ -54,7 +54,8 @@ router.post('/login', async (req, res) => {
             res.status(401).json({ message: 'Invalid username or password' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server error during login' });
+        console.error("Login Error:", error);
+        res.status(500).json({ message: 'Server error during login: ' + error.message });
     }
 });
 
