@@ -64,6 +64,7 @@ const UserSchema = new mongoose.Schema({
     landingPageUrl: String,
     qrCodeUrl: String,
     nfcUrl: String,
+    nfcPassword: { type: String },
 
     views: {
         digitalCard: { type: Number, default: 0 },

@@ -22,9 +22,21 @@ try {
 // GET /api/admin/sub-admins
 router.get('/sub-admins', protect, adminOnly, async (req, res) => {
     try {
-        const subAdmins = await User.find({ role: 'SUB_ADMIN', isDeleted: false }).select('-passwordHash').lean();
+        const subAdminsDocs = await User.find({ role: 'SUB_ADMIN', isDeleted: false }).select('-passwordHash');
+        const subAdmins = [];
         
-        for (let admin of subAdmins) {
+        for (let adminDoc of subAdminsDocs) {
+            let admin = adminDoc.toObject();
+            
+            // Auto-generate nfcPassword if missing
+            if (!admin.nfcPassword && admin.fullName && admin.mobile) {
+                const namePart = admin.fullName.substring(0, 3).toUpperCase();
+                const mobileStr = String(admin.mobile);
+                const mobilePart = mobileStr.length >= 5 ? mobileStr.slice(-5) : mobileStr;
+                admin.nfcPassword = `${namePart}@${mobilePart}`;
+                await User.updateOne({ _id: admin._id }, { $set: { nfcPassword: admin.nfcPassword } });
+            }
+
             const activeCards = await NfcCard.countDocuments({ subAdminId: admin._id, status: 'Active' });
             const disabledCards = await NfcCard.countDocuments({ subAdminId: admin._id, status: 'Disabled' });
             
@@ -37,6 +49,7 @@ router.get('/sub-admins', protect, adminOnly, async (req, res) => {
                 master: masterCardCount,
                 total: activeCards + disabledCards + masterCardCount
             };
+            subAdmins.push(admin);
         }
 
         res.json(subAdmins);
@@ -75,6 +88,10 @@ router.post('/sub-admins', protect, adminOnly, async (req, res) => {
         return res.status(400).json({ message: 'Password must be provided and at least 6 characters long.' });
     }
 
+    if (!mobile) {
+        return res.status(400).json({ message: 'Mobile number is required to create a Sub Admin.' });
+    }
+
     try {
         if (!username || !username.includes('@') || !username.includes('.')) {
             return res.status(400).json({ message: 'Username must be a valid email format containing "@" and "."' });
@@ -102,7 +119,7 @@ router.post('/sub-admins', protect, adminOnly, async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        const permanentUrl = `https://yourdomain.com/${slug}`;
+        const permanentUrl = `https://digital-card-customer-frontend.vercel.app/${slug}`;
         const nfcUrl = permanentUrl;
 
         // Generate QR code
@@ -114,6 +131,12 @@ router.post('/sub-admins', protect, adminOnly, async (req, res) => {
             width: 1024,
             margin: 2
         });
+
+        // Generate NFC Password
+        const namePart = fullName ? fullName.substring(0, 3).toUpperCase() : 'NFC';
+        const mobileStr = mobile ? String(mobile) : '00000';
+        const mobilePart = mobileStr.length >= 5 ? mobileStr.slice(-5) : mobileStr;
+        const nfcPassword = `${namePart}@${mobilePart}`;
 
         const newSubAdmin = new User({
             role: 'SUB_ADMIN',
@@ -132,7 +155,8 @@ router.post('/sub-admins', protect, adminOnly, async (req, res) => {
             slug,
             landingPageUrl: permanentUrl,
             nfcUrl,
-            qrCodeUrl
+            qrCodeUrl,
+            nfcPassword
         });
 
         const createdSubAdmin = await newSubAdmin.save();
