@@ -436,6 +436,7 @@ router.get('/sub-admins/:id/nfc', protect, adminOnly, async (req, res) => {
             cardNumber: card.cardNumber,
             uniqueToken: card.uniqueToken,
             isActive: card.isActive,
+            isLockedByMaster: card.isLockedByMaster,
             writtenCards: writtenCards
         });
     } catch (error) {
@@ -493,6 +494,18 @@ router.put('/sub-admins/:id/nfc/toggle', protect, adminOnly, async (req, res) =>
         res.json({ message: `NFC Card ${card.isActive ? 'activated' : 'deactivated'} successfully`, card });
     } catch (error) {
         res.status(500).json({ message: 'Error toggling NFC status' });
+    }
+});
+// PUT /api/admin/sub-admins/:id/nfc/lock
+router.put('/sub-admins/:id/nfc/lock', protect, adminOnly, async (req, res) => {
+    try {
+        const card = await DigitalCard.findOne({ ownerId: req.params.id });
+        if (!card) return res.status(404).json({ message: 'Digital Card not found' });
+        card.isLockedByMaster = true;
+        await card.save();
+        res.json({ message: 'Card successfully locked by Master Admin' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error locking card' });
     }
 });
 
